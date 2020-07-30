@@ -6,14 +6,31 @@ from .base import *
 __all__ = ['User']
 
 class User(Base):
-    # 表的名字:
+    def __init__(self, uname, passwd):
+        self.username = uname
+        self.password = passwd
+
     __tablename__ = 'users'
 
-    # 表的结构:
     id = Column(Integer, primary_key=True)
     username = Column(String(20))
     password = Column(String(50))
     
-    secrets_id = Column(Integer, ForeignKey('secrets.id'))
-    secrets = relationship('Secret', back_populates='users')
+    # secrets_id = Column(Integer, ForeignKey('secrets.id'))
+    secrets = relationship('Secret')
     # accessiable_secrets = relationship('Secret')
+
+    @staticmethod
+    def create(db_session, uname, passwd, secrets=[]):
+        user = User(uname, passwd)
+
+        print(secrets)
+        for s in secrets:
+            user.secrets.append(s)
+
+        return db_session.merge(user)
+
+    @staticmethod
+    def get_available_secrets_by_username(db_session, uname):
+        user =  db_session.query(User).filter(User.username == uname).first()
+        return user.secrets
