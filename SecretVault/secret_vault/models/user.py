@@ -16,9 +16,7 @@ class User(Base):
     username = Column(String(20))
     password = Column(String(50))
     
-    # secrets_id = Column(Integer, ForeignKey('secrets.id'))
     secrets = relationship('Secret')
-    # accessiable_secrets = relationship('Secret')
 
     @staticmethod
     def create(db_session, uname, passwd, secrets=[]):
