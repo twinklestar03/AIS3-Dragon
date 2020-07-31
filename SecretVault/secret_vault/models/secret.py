@@ -39,3 +39,13 @@ class Secret(Base):
             return db_session.query(Secret).all()
         except:
             return None
+
+    @staticmethod
+    def delete(db_session, secret_name):
+        try:
+            secret = db_session.query(Secret).filter(Secret.secret_name == secret_name).first()
+            db_session.delete(secret)
+            return True
+        except Exception as e:
+            print(e)
+            return False

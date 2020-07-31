@@ -6,7 +6,7 @@ from secret_vault.utils import DB
 
 from .utils import *
 
-__all__ = ['GetSecretAPI', 'CreateSecretAPI', 'ListSecretAPI']
+__all__ = ['GetSecretAPI', 'CreateSecretAPI', 'ListSecretAPI', 'DeleteSecretAPI']
 
 
 class GetSecretAPI(MethodView):
@@ -86,6 +86,29 @@ class ListSecretAPI(MethodView):
                 )
         else:
             return get_json(
+                ReturnStatus.Fail,
+                SecretResult.NotAccessiable
+            )
+
+class DeleteSecretAPI(MethodView):
+    def get(self, secret_name):
+        if 'access_token' in request.headers:
+                if SecretManager.is_valid_secret(secret_name):
+                    access_token = request.headers['access_token']
+
+                    if SecretManager.can_delete(access_token):
+                        SecretManager.delete_secret(secret_name)
+                        return get_json(
+                            ReturnStatus.Success,
+                            secret_name
+                        )
+                else:
+                     return get_json(
+                        ReturnStatus.Fail,
+                        SecretResult.InvaildSecretName
+                    )
+
+        return get_json(
                 ReturnStatus.Fail,
                 SecretResult.NotAccessiable
             )

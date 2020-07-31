@@ -53,5 +53,18 @@ class SecretManager:
                 return False
 
     @classmethod
+    def delete_secret(cls, secret_name, **kwargs):
+        with cls.db.session() as db:
+            if Secret.delete(db, secret_name):
+                return True
+            
+            else:
+                return False
+
+    @classmethod
     def can_create(cls, access_token=''):
+        return True
+
+    @classmethod
+    def can_delete(cls, access_token=''):
         return True
