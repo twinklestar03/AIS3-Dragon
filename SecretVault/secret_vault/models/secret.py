@@ -32,3 +32,10 @@ class Secret(Base):
         
         except:
             return None
+
+    @staticmethod
+    def get_all(db_session):
+        try:
+            return db_session.query(Secret).all()
+        except:
+            return None
