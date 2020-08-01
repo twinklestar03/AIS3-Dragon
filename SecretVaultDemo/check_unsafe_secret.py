@@ -63,7 +63,7 @@ with open(filename, 'r') as f:
 
                 h = hashlib.sha256(fin.encode()).hexdigest()
 
-                if sv.check_is_expose(h):
+                if sv.check_is_expose(h, sys.argv[1], line_count):
                     unsafe = True
                     print(f'[-] Error!! Secret EXPOSED IN SOURCE at line: {line_count}')
 

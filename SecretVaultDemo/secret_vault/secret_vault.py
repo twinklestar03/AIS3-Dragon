@@ -4,7 +4,7 @@ import requests
 class SecretVault:
     AUTH = '/auth'
     GET_SECRET = '/get_secret/{}'
-    IS_EXPOSE = '/is_expose/{}'
+    IS_EXPOSE = '/is_expose'
     def __init__(self, server, api_key_file):
         self.server = server
         with open(api_key_file, 'r') as f:
@@ -22,9 +22,16 @@ class SecretVault:
     def get_url(server, endpoint):
         return 'http://' + server + '/' + endpoint
 
-    def check_is_expose(self, h):
-        req = self.IS_EXPOSE.format(h)
-        res = requests.get(self.get_url(self.server, req), headers={'access_token': self.token})
+    def check_is_expose(self, h, filename, n_line):
+        req = self.IS_EXPOSE
+        res = requests.post(self.get_url(self.server, req),
+            headers={'access_token': self.token},
+            data={
+                'hash': h,
+                'file': filename,
+                'n_line': n_line
+            }
+        )
 
         data = res.json()
 
