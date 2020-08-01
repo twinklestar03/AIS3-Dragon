@@ -1,0 +1,4 @@
+language: python
+repository:
+    type: git
+    url: github.com/test/test.git

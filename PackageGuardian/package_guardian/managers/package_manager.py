@@ -1,12 +1,15 @@
 from distutils.version import LooseVersion
 import sys, token, tokenize, dis, pathlib, json
 from datetime import datetime
-# import yaml
 
 __all__ = ["PackageManager"]
 
 
 class PackageManager:
+    @classmethod
+    def initialize(cls, config):
+        cls.config = config
+
     @classmethod
     def scan_package(cls):
         code = cls.merge_repo_code()
@@ -151,7 +154,11 @@ class PackageManager:
 
     @classmethod
     def merge_repo_code(cls):
-        filenames = list(pathlib.Path("./repository").glob("**/*.py"))
+        print(cls.config)
+        if cls.config.language == "python":
+            filenames = list(pathlib.Path("../repository").glob("**/*.py"))
+        else:
+            filenames = []
         codes = []
         for filename in filenames:
             code = "".join(clear_code(str(filename)))
