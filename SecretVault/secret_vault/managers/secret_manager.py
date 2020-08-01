@@ -94,11 +94,12 @@ class SecretManager:
 
     @classmethod
     def is_exposed(cls, secret_hash, filename, n_line, **kwargs):
+        is_exp = False
+        warning_entry = cls.warning_entries.get(filename, dict())
+        warning_entry['filename'] = filename
+        warning_entry['date'] = str(datetime.now()) # Last scan
         if secret_hash in cls.secrets_hash_cache:
-
-            warning_entry = cls.warning_entries.get(filename, dict())
-            warning_entry['filename'] = filename
-
+            is_exp = True
             # Prevent duplicate entries of lines 
             if warning_entry.get('date', None) is not None:
                 datetime_obj = datetime.strptime(warning_entry['date'], '%Y-%m-%d %H:%M:%S.%f')
@@ -109,14 +110,15 @@ class SecretManager:
             lines = warning_entry.get('lines', list())
             lines.append(n_line)
             warning_entry['lines'] = lines
-            warning_entry['date'] = str(datetime.now())
-
-            cls.warning_entries[filename] = warning_entry
             
-            print(cls.warning_entries)
-            return True
+        else:
+            is_exp = False
 
-        return False
+        warning_entry['is_expose'] = is_exp
+        cls.warning_entries[filename] = warning_entry
+        print(cls.warning_entries)
+        
+        return is_exp
 
     @classmethod
     def get_exposed_datas(cls):
