@@ -15,7 +15,7 @@ class PackageManager:
         code = cls.merge_repo_code()
         packages = cls.list_packages()
         used_packages = cls.package_coverage(code)
-        results = cls.scan(packages)
+        results = cls.scan(packages, used_packages)
         time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cls.save_result(time, results)
         return time, results
@@ -40,11 +40,19 @@ class PackageManager:
     def search_package(cls, package_name, package_version):
         vuln_packages = {
             "Pillow": {
-                "status": "high",
+                "cve": "CVE-2020-11538",
+                "score": "8.1(High)",
                 "affected_versions": "<7.1.0",
                 "patched_versions": "7.1.0",
                 "description": "In libImaging/Jpeg2KDecode.c in Pillow before 7.0.0, there are multiple out-of-bounds reads via a crafted JP2 file.",
-            }
+            },
+            "Twisted": {
+                "cve": "CVE-2020-10108",
+                "score": "9.8(Critical)",
+                "affected_versions": "<20.3.0",
+                "patched_versions": "20.3.0",
+                "description": "In Twisted Web through 19.10.0, there was an HTTP request splitting vulnerability. When presented with two content-length headers, it ignored the first header. When the second content-length value was set to zero, the request body was interpreted as a pipelined request.",
+            },
         }
         vuln_package = (
             vuln_packages[package_name] if package_name in vuln_packages else None
@@ -92,7 +100,7 @@ class PackageManager:
     def package_coverage(cls, code):
         code_lines = code.split("\n")
         used_packages = {}
-
+        load_name_times = 0
         for code_line in code_lines:
             exec(code_line)
             instructions = iter(dis.Bytecode(code_line))
@@ -111,6 +119,7 @@ class PackageManager:
                     ):
                         used_packages[ins.argval]["sinks"].add(next2_ins.argval)
                 elif ins.opname == "LOAD_NAME":
+                    load_name_times += 1
                     for package_name, package in used_packages.items():
                         if ins.argval in package["sinks"]:
                             package["use_times"] += 1
@@ -124,22 +133,58 @@ class PackageManager:
                     if package_name in used_packages:
                         used_packages[package_name]["sinks"].add(ins.argval)
 
+        for package_name, used_package in used_packages.items():
+            used_package["coverage"] = used_package["use_times"] / load_name_times
+
+        print(used_packages)
         return used_packages
 
     @classmethod
-    def scan(cls, packages):
+    def scan(cls, packages, used_packages):
         scan_results = []
         for package_name, package_version in packages.items():
             scan_result = {"package_name": package_name, "version": package_version}
             vuln_package_detail = cls.search_package(package_name, package_version)
             if vuln_package_detail:
-                scan_result["status"] = "high"
+                if package_name == "Pillow":
+                    used_package = used_packages["PIL"]
+                elif package_name == "Twisted":
+                    used_package = used_packages["twisted"]
+                else:
+                    used_package = used_packages[package_name]
+                coverage = used_package["coverage"]
+                origin_score = vuln_package_detail["score"]
+                score = cls.calculate_new_score(coverage, origin_score)
+                scan_result["score"] = score
                 scan_result["detail"] = vuln_package_detail
             else:
-                scan_result["status"] = "ok"
+                scan_result["status"] = "0(None)"
                 scan_result["detail"] = None
             scan_results.append(scan_result)
         return scan_results
+
+    @classmethod
+    def calculate_new_score(cls, coverage, score):
+        score = float(score.split("(")[0]) / 10
+        # print("score", score)
+        # print("coverage", coverage)
+        score = (coverage * score) ** 0.5 * 10
+
+        if score >= 9.0:
+            level = "Critical"
+        elif score >= 7.0:
+            level = "High"
+        elif score >= 4.0:
+            level = "Medium"
+        elif score >= 0.1:
+            level = "Low"
+        else:
+            level = "None"
+        score = format(score, ".1f")
+        score = f"{score}({level})"
+        # print("new", score)
+
+        return score
 
     @classmethod
     def list_packages(cls):
@@ -156,12 +201,13 @@ class PackageManager:
     def merge_repo_code(cls):
         print(cls.config)
         if cls.config.language == "python":
-            filenames = list(pathlib.Path("../repository").glob("**/*.py"))
+            # filenames = list(pathlib.Path("../repository").glob("**/*.py"))
+            filenames = list(pathlib.Path("../repository").glob("**/test.py"))
         else:
             filenames = []
         codes = []
         for filename in filenames:
-            code = "".join(clear_code(str(filename)))
+            code = "".join(cls.clear_code(str(filename)))
             code_lines = [code_line for code_line in code.split("\n") if code_line]
             code = "\n".join(code_lines)
             codes.append(code)
