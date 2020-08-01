@@ -20,7 +20,7 @@ class SecretVault(object):
         self.app.add_url_rule('/list_secrets', view_func=ListSecretAPI.as_view('list_secret_api'))
         self.app.add_url_rule('/create_secret', view_func=CreateSecretAPI.as_view('create_secret_api'))
         self.app.add_url_rule('/delete_secret/<string:secret_name>', view_func=DeleteSecretAPI.as_view('delete_secret_api'))
-        self.app.add_url_rule('/is_expose/<string:h>', view_func=ExposeCheckerAPI.as_view('is_expose_api'))
+        self.app.add_url_rule('/is_expose', view_func=ExposeCheckerAPI.as_view('is_expose_api'))
         self.app.add_url_rule('/auth', view_func=AuthAPI.as_view('auth_api'))
     
     def run(self):

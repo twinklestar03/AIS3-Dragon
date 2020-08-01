@@ -114,17 +114,41 @@ class DeleteSecretAPI(MethodView):
             )
 
 class ExposeCheckerAPI(MethodView):
-    def get(self, h):
-        if SecretManager.is_exposed(h):
-            return get_json(
-                ReturnStatus.Fail,
-                SecretResult.IsExposed
-            )
-        else:
+    def get(self):
+        if 'access_token' in request.headers:
+            exposed_datas = SecretManager.get_exposed_datas()
+
             return get_json(
                 ReturnStatus.Success,
-                SecretResult.Safe
+                exposed_datas
             )
+
+        return get_json(
+            ReturnStatus.Fail,
+            SecretResult.NotAccessiable
+        )
+        
+    def post(self):
+        h = request.form.get('hash', None)
+        filename = request.form.get('file')
+        n_line = request.form.get('n_line')
+
+        if 'access_token' in request.headers:
+            if SecretManager.is_exposed(h, filename, n_line):
+                return get_json(
+                    ReturnStatus.Fail,
+                    SecretResult.IsExposed
+                )
+            else:
+                return get_json(
+                    ReturnStatus.Success,
+                    SecretResult.Safe
+                )
+        
+        return get_json(
+            ReturnStatus.Fail,
+            SecretResult.NotAccessiable
+        )
 
 class AuthAPI(MethodView):
     def get(self):

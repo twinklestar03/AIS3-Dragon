@@ -1,5 +1,6 @@
 import logging
 import hashlib
+from datetime import datetime
 from secret_vault.models import Secret
 
 __all__ = ['SecretManager']
@@ -11,6 +12,7 @@ class SecretManager:
         cls.db = db
         cls.secrets_hash_cache = []
         cls.users_cache = []
+        cls.warning_entries = {}
 
         cls._gen_all_secret_hash()
 
@@ -91,8 +93,23 @@ class SecretManager:
         return True
 
     @classmethod
-    def is_exposed(cls, secret_hash, **kwargs):
+    def is_exposed(cls, secret_hash, filename, n_line, **kwargs):
         if secret_hash in cls.secrets_hash_cache:
+            warning_entry = cls.warning_entries.get(filename, dict())
+            warning_entry['filename'] = filename
+
+            lines = warning_entry.get('lines', list())
+            lines.append(n_line)
+            warning_entry['lines'] = lines
+            warning_entry['date'] = str(datetime.now())
+
+            cls.warning_entries[filename] = warning_entry
+            
+            print(cls.warning_entries)
             return True
 
         return False
+
+    @classmethod
+    def get_exposed_datas(cls):
+        return cls.warning_entries
