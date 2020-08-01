@@ -158,7 +158,7 @@ class PackageManager:
                 scan_result["score"] = score
                 scan_result["detail"] = vuln_package_detail
             else:
-                scan_result["status"] = "0(None)"
+                scan_result["score"] = "0.0(None)"
                 scan_result["detail"] = None
             scan_results.append(scan_result)
         return scan_results
@@ -166,8 +166,8 @@ class PackageManager:
     @classmethod
     def calculate_new_score(cls, coverage, score):
         score = float(score.split("(")[0]) / 10
-        # print("score", score)
-        # print("coverage", coverage)
+        print("score", score)
+        print("coverage", coverage)
         score = (coverage * score) ** 0.5 * 10
 
         if score >= 9.0:
@@ -182,7 +182,7 @@ class PackageManager:
             level = "None"
         score = format(score, ".1f")
         score = f"{score}({level})"
-        # print("new", score)
+        print("new", score)
 
         return score
 
