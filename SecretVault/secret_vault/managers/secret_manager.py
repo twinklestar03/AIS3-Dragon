@@ -95,8 +95,16 @@ class SecretManager:
     @classmethod
     def is_exposed(cls, secret_hash, filename, n_line, **kwargs):
         if secret_hash in cls.secrets_hash_cache:
+
             warning_entry = cls.warning_entries.get(filename, dict())
             warning_entry['filename'] = filename
+
+            # Prevent duplicate entries of lines 
+            if warning_entry.get('date', None) is not None:
+                datetime_obj = datetime.strptime(warning_entry['date'], '%Y-%m-%d %H:%M:%S.%f')
+
+                if (datetime.now() - datetime_obj).seconds > 10:
+                    warning_entry['lines'] = list()
 
             lines = warning_entry.get('lines', list())
             lines.append(n_line)
