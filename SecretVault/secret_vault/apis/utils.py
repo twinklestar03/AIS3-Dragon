@@ -13,6 +13,8 @@ class SecretResult:
     NotAccessiable = 'Not Accessiable to resources'
     InvaildSecretName = 'Invalid secret name'
     BadRequest = 'Bad Request'
+    IsExposed = 'The Secret is EXPOSED'
+    Safe = 'All seems fine'
 
 def get_json(status, result, **kwargs):
     data = {}
