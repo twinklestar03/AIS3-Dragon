@@ -32,7 +32,7 @@ class SecretVault:
                 'n_line': n_line
             }
         )
-
+        
         data = res.json()
 
         if data['status'] == 'success':
