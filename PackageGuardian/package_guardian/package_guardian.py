@@ -1,14 +1,17 @@
 from flask import Flask
 from package_guardian.apis import ScanPackageAPI, LastScanPackageAPI
+from package_guardian.managers import PackageManager
+from package_guardian.utils import Config
 
 
 class PackageGuardian(object):
-    def __init__(self, port):
+    def __init__(self, port, config_file):
         self.app = Flask("__main__")
         self.port = port
+        self.config = Config(config_file)
         self._add_all_rules()
 
-        # Place your initializations here
+        PackageManager.initialize(self.config)
 
     def _add_all_rules(self):
         # Your API endpoints
