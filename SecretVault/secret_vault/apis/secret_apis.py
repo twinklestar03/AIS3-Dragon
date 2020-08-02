@@ -1,3 +1,6 @@
+import time
+import random
+import hashlib
 from flask import Flask, jsonify, request, Response
 from flask.views import MethodView
 from secret_vault.managers import SecretManager
@@ -153,10 +156,13 @@ class ExposeCheckerAPI(MethodView):
 class AuthAPI(MethodView):
     def get(self):
         if 'api_key' in request.headers:
+            s = str(time.time()) + request.headers['api_key']
+            token_org = ''.join(random.sample(s, len(s)))
+
             return get_json(
                 ReturnStatus.Success,
                 SecretResult.Safe,
-                token='This_a_token'
+                token=hashlib.sha256(token_org.encode()).hexdigest()
             )
 
         return get_json(
